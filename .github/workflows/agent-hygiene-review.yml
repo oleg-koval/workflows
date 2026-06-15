@@ -29,7 +29,7 @@ jobs:
         id: lint
         continue-on-error: true
         run: |
-          python3 scripts/agent_hygiene_report.py repo --min-score 75 > /tmp/agent-hygiene.json
+          python3 repo/scripts/agent_hygiene_report.py repo --min-score 75 > /tmp/agent-hygiene.json
 
       - name: Summarize results
         if: always()
