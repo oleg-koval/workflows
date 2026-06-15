@@ -19,10 +19,16 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: hashFiles('.lighthouserc.json') != ''
         with:
           node-version: '20'
 
       - name: Run Lighthouse CI
+        if: hashFiles('.lighthouserc.json') != ''
         run: npx --yes @lhci/cli@0.14.0 autorun --config=.lighthouserc.json
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Skip Lighthouse CI
+        if: hashFiles('.lighthouserc.json') == ''
+        run: echo "No .lighthouserc.json found; skipping Lighthouse CI."
