@@ -6,6 +6,13 @@ on:
   schedule:
     - cron: '0 9 */3 * *'   # every 3 days at 09:00 UTC — adjust to taste
   workflow_dispatch:
+  workflow_call:
+    secrets:
+      SUPABASE_KEEPALIVE_URL:
+        description: 'URL of the Supabase Edge Function or REST endpoint to ping'
+        required: true
+
+permissions: {}
 
 concurrency:
   group: supabase-keepalive

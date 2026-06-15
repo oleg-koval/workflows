@@ -2,6 +2,8 @@ name: Anti-Slop
 
 # Block AI-generated filler/slop phrases in PR diffs.
 # Runs only on pull requests (not on pushes to main).
+# NOTE: This workflow requires pull_request event (with PR context and diff).
+# It is not usable via workflow_call on other events.
 on:
   pull_request:
 
