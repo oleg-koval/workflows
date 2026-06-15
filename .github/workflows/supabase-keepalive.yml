@@ -26,5 +26,6 @@ jobs:
           fi
           curl -fsS -X POST \
             -H "Content-Type: application/json" \
+            -d '{}' \
             "$URL"
           echo "✅ Keepalive successful"
