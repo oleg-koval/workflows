@@ -25,35 +25,11 @@ jobs:
           path: repo
           persist-credentials: false
 
-      - name: Check out agent-hygiene-linter
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          repository: oleg-koval/ai-refactor-playbook-runner
-          ref: d76e56de21df2b5796cd62726e8f4c56c7c7d978
-          path: linter
-          persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: '20'
-
-      - name: Install linter dependencies
-        working-directory: linter
-        run: npm ci
-
-      - name: Build linter
-        working-directory: linter
-        run: npm run build
-
       - name: Run agent hygiene review
         id: lint
         continue-on-error: true
-        working-directory: linter
-        env:
-          MIN_SCORE: '75'
         run: |
-          node dist/cli.js ../repo --format json --min-score "$MIN_SCORE" > /tmp/agent-hygiene.json
+          python3 scripts/agent_hygiene_report.py repo --min-score 75 > /tmp/agent-hygiene.json
 
       - name: Summarize results
         if: always()
@@ -70,7 +46,14 @@ jobs:
               print(summary)
               raise SystemExit(0)
 
-          report = json.loads(report_path.read_text())
+          try:
+              report = json.loads(report_path.read_text())
+          except json.JSONDecodeError as exc:
+              summary = '# Agent Hygiene Review\n\n- Linter output was not valid JSON.\n'
+              Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(summary)
+              print(summary)
+              raise SystemExit(1) from exc
+
           findings = report['findings']
           non_good = [finding for finding in findings if finding['bucket'] != 'good']
 
