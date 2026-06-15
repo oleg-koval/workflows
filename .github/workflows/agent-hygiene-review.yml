@@ -1,0 +1,90 @@
+name: Agent Hygiene Review
+
+# Run the agent hygiene linter on PRs and surface the score in the check summary.
+# The linter only inspects the repo tree; it does not execute code from the target repo.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-hygiene-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: repo
+          persist-credentials: false
+
+      - name: Install pyyaml
+        run: pip install pyyaml
+
+      - name: Run agent hygiene review
+        id: lint
+        continue-on-error: true
+        run: |
+          python3 repo/scripts/agent_hygiene_report.py repo --min-score 75 > /tmp/agent-hygiene.json
+
+      - name: Summarize results
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          report_path = Path('/tmp/agent-hygiene.json')
+          if not report_path.exists():
+              summary = '# Agent Hygiene Review\n\n- Linter did not produce a report.\n'
+              Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(summary)
+              print(summary)
+              raise SystemExit(0)
+
+          try:
+              report = json.loads(report_path.read_text())
+          except json.JSONDecodeError as exc:
+              summary = '# Agent Hygiene Review\n\n- Linter output was not valid JSON.\n'
+              Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(summary)
+              print(summary)
+              raise SystemExit(1) from exc
+
+          findings = report['findings']
+          non_good = [finding for finding in findings if finding['bucket'] != 'good']
+
+          lines = [
+              '# Agent Hygiene Review',
+              '',
+              f"- Repo: `{report['repoName']}`",
+              f"- Score: **{report['score']}/100**",
+              f"- Good: {report['counts']['good']}",
+              f"- Warning: {report['counts']['warning']}",
+              f"- Fix now: {report['counts']['fixNow']}",
+              '',
+              '## Findings',
+          ]
+
+          for finding in findings:
+              lines.append(f"- [{finding['bucket']}] **{finding['title']}** - {finding['detail']}")
+
+          if non_good:
+              lines.extend(['', '## Highest-impact fixes'])
+              for finding in non_good[:5]:
+                  lines.append(f"- {finding['title']}")
+
+          summary = '\n'.join(lines) + '\n'
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(summary)
+          print(summary)
+          PY
+
+      - name: Fail if score is below threshold
+        if: steps.lint.outcome != 'success'
+        run: exit 1
