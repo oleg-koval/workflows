@@ -1,0 +1,31 @@
+name: Supabase Keepalive
+
+# Prevent Supabase free-tier project from pausing due to inactivity.
+# Set SUPABASE_KEEPALIVE_URL secret to your Edge Function or REST URL.
+on:
+  schedule:
+    - cron: '0 9 */3 * *'   # every 3 days at 09:00 UTC — adjust to taste
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping keepalive endpoint
+        env:
+          URL: ${{ secrets.SUPABASE_KEEPALIVE_URL }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "::error::SUPABASE_KEEPALIVE_URL secret not set"
+            exit 1
+          fi
+          curl -fsS -X POST \
+            -H "Content-Type: application/json" \
+            "$URL" \
+            && echo "✅ Keepalive successful" \
+            || echo "⚠️ Keepalive ping failed — project may be paused already"
