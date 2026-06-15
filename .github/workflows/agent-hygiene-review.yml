@@ -25,6 +25,9 @@ jobs:
           path: repo
           persist-credentials: false
 
+      - name: Install pyyaml
+        run: pip install pyyaml
+
       - name: Run agent hygiene review
         id: lint
         continue-on-error: true
