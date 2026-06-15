@@ -26,6 +26,5 @@ jobs:
           fi
           curl -fsS -X POST \
             -H "Content-Type: application/json" \
-            "$URL" \
-            && echo "✅ Keepalive successful" \
-            || echo "⚠️ Keepalive ping failed — project may be paused already"
+            "$URL"
+          echo "✅ Keepalive successful"
