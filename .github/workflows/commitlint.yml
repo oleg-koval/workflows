@@ -46,7 +46,10 @@ jobs:
           fi
 
       - name: Lint commit messages
-        if: hashFiles('package.json') != '' && (github.event.pull_request.base.sha != '' || inputs.base-sha != '')
+        if: >-
+          hashFiles('package.json') != '' &&
+          (inputs.base-sha != '' || github.event.pull_request.base.sha != '') &&
+          (inputs.head-sha != '' || github.event.pull_request.head.sha != '')
         env:
           FROM_SHA: ${{ inputs.base-sha || github.event.pull_request.base.sha }}
           TO_SHA: ${{ inputs.head-sha || github.event.pull_request.head.sha }}
@@ -61,5 +64,10 @@ jobs:
         run: echo "No package.json found; skipping commitlint."
 
       - name: Skip commitlint (missing SHAs)
-        if: hashFiles('package.json') != '' && github.event.pull_request.base.sha == '' && inputs.base-sha == ''
-        run: echo "No base/head SHAs provided (required for workflow_call outside PR context); skipping commitlint."
+        if: >-
+          hashFiles('package.json') != '' &&
+          !(
+            (inputs.base-sha != '' || github.event.pull_request.base.sha != '') &&
+            (inputs.head-sha != '' || github.event.pull_request.head.sha != '')
+          )
+        run: echo "Both base and head SHAs are required (for workflow_call outside PR context); skipping commitlint."
