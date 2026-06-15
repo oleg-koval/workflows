@@ -30,6 +30,12 @@
 | [anti-slop](.github/workflows/anti-slop.yml) | `pull_request` | Block AI-generated filler phrases in PR diffs |
 | [docs-index-keeper](.github/workflows/docs-index-keeper.yml) | `push`/`pull_request` to `docs/**` | Require docs/README.md index to be up to date |
 
+### Code review
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| [agent-hygiene-review](.github/workflows/agent-hygiene-review.yml) | `pull_request_target` | Runs `agent-hygiene-linter` against the PR branch and surfaces repo hygiene issues in the job summary |
+
 ### Performance
 
 | Workflow | Trigger | What it does |

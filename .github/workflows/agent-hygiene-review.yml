@@ -1,0 +1,98 @@
+name: Agent Hygiene Review
+
+# Run the agent hygiene linter on PRs and surface the score in the check summary.
+# The linter only inspects the repo tree; it does not execute code from the target repo.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-hygiene-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: repo
+          fetch-depth: 0
+
+      - name: Check out agent-hygiene-linter
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: oleg-koval/ai-refactor-playbook-runner
+          ref: main
+          path: linter
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Install linter dependencies
+        working-directory: linter
+        run: npm ci
+
+      - name: Build linter
+        working-directory: linter
+        run: npm run build
+
+      - name: Run agent hygiene review
+        id: lint
+        continue-on-error: true
+        working-directory: linter
+        env:
+          MIN_SCORE: '75'
+        run: |
+          node dist/cli.js ../repo --format json --min-score "$MIN_SCORE" > /tmp/agent-hygiene.json
+
+      - name: Summarize results
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          report_path = Path('/tmp/agent-hygiene.json')
+          report = json.loads(report_path.read_text())
+          findings = report['findings']
+          non_good = [finding for finding in findings if finding['bucket'] != 'good']
+
+          lines = [
+              '# Agent Hygiene Review',
+              '',
+              f"- Repo: `{report['repoName']}`",
+              f"- Score: **{report['score']}/100**",
+              f"- Good: {report['counts']['good']}",
+              f"- Warning: {report['counts']['warning']}",
+              f"- Fix now: {report['counts']['fixNow']}",
+              '',
+              '## Findings',
+          ]
+
+          for finding in findings:
+              lines.append(f"- [{finding['bucket']}] **{finding['title']}** - {finding['detail']}")
+
+          if non_good:
+              lines.extend(['', '## Highest-impact fixes'])
+              for finding in non_good[:5]:
+                  lines.append(f"- {finding['title']}")
+
+          summary = '\n'.join(lines) + '\n'
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(summary)
+          print(summary)
+          PY
+
+      - name: Fail if score is below threshold
+        if: steps.lint.outcome != 'success'
+        run: exit 1
