@@ -33,7 +33,7 @@ jobs:
 
           git fetch --tags --force
 
-          existing_releases="$(gh release list --limit 1000 --json tagName --jq '.[].tagName')"
+          existing_releases="$(gh release list --limit 9999 --json tagName --jq '.[].tagName')"
           latest_stable_tag="$(git tag -l 'v[0-9]*' | grep -Ev '-' | sort -V | tail -n 1 || true)"
 
           git tag -l 'v[0-9]*' --sort=version:refname | while IFS= read -r tag; do

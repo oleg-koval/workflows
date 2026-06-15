@@ -23,6 +23,6 @@ jobs:
           node-version: '20'
 
       - name: Run Lighthouse CI
-        run: npx --yes @lhci/cli@0.14.x autorun --config=.lighthouserc.json
+        run: npx --yes @lhci/cli@0.14.0 autorun --config=.lighthouserc.json
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
