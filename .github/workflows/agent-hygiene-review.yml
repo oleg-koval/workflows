@@ -3,7 +3,7 @@ name: Agent Hygiene Review
 # Run the agent hygiene linter on PRs and surface the score in the check summary.
 # The linter only inspects the repo tree; it does not execute code from the target repo.
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
 permissions:
@@ -23,15 +23,15 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
           path: repo
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: Check out agent-hygiene-linter
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: oleg-koval/ai-refactor-playbook-runner
-          ref: main
+          ref: d76e56de21df2b5796cd62726e8f4c56c7c7d978
           path: linter
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -64,6 +64,12 @@ jobs:
           from pathlib import Path
 
           report_path = Path('/tmp/agent-hygiene.json')
+          if not report_path.exists():
+              summary = '# Agent Hygiene Review\n\n- Linter did not produce a report.\n'
+              Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(summary)
+              print(summary)
+              raise SystemExit(0)
+
           report = json.loads(report_path.read_text())
           findings = report['findings']
           non_good = [finding for finding in findings if finding['bucket'] != 'good']

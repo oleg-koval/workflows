@@ -34,7 +34,7 @@
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
-| [agent-hygiene-review](.github/workflows/agent-hygiene-review.yml) | `pull_request_target` | Runs `agent-hygiene-linter` against the PR branch and surfaces repo hygiene issues in the job summary |
+| [agent-hygiene-review](.github/workflows/agent-hygiene-review.yml) | `pull_request` | Runs `agent-hygiene-linter` against the PR branch and surfaces repo hygiene issues in the job summary |
 
 ### Performance
 
