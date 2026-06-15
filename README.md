@@ -142,6 +142,7 @@ mv secret-scan-gitleaks.yml .github/workflows/
 | `lighthouse-performance` | — | `LHCI_GITHUB_APP_TOKEN` (optional) | |
 | `supabase-keepalive` | — | `SUPABASE_KEEPALIVE_URL` (required) | |
 | `scorecard` | `publish-results` (bool, default `false`) | — | Requires Code Scanning enabled to publish SARIF |
+| `automerge-github-action` | none (uses GITHUB_TOKEN) |
 | `docs-index-keeper` | — | — | |
 
 ---
