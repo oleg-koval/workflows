@@ -12,6 +12,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: backfill-releases
+  cancel-in-progress: false
+
 jobs:
   backfill:
     name: Backfill missing releases
