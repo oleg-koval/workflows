@@ -46,8 +46,14 @@ jobs:
         id: lint
         continue-on-error: true
         run: |
-          SCRIPT_PATH=$([ "${{ github.event_name }}" = "workflow_call" ] && echo "linter/scripts/agent_hygiene_report.py" || echo "repo/scripts/agent_hygiene_report.py")
-          python3 "$SCRIPT_PATH" repo --min-score ${{ inputs.min-score || 75 }} > /tmp/agent-hygiene.json
+          if [ "${{ github.event_name }}" = "workflow_call" ]; then
+            SCRIPT_PATH="linter/scripts/agent_hygiene_report.py"
+            MIN_SCORE="${{ inputs.min-score }}"
+          else
+            SCRIPT_PATH="repo/scripts/agent_hygiene_report.py"
+            MIN_SCORE=75
+          fi
+          python3 "$SCRIPT_PATH" repo --min-score "$MIN_SCORE" > /tmp/agent-hygiene.json
 
       - name: Summarize results
         if: always()
