@@ -8,9 +8,8 @@ on:
   workflow_call:
     inputs:
       min-release-tag:
-        description: 'Skip tags older than this version (e.g. v1.0.0)'
+        description: 'Skip tags older than this version (e.g. v1.0.0). Defaults to vars.BACKFILL_MIN_TAG, then v0.0.0.'
         type: string
-        default: 'v0.0.0'
   workflow_run:
     workflows: ['Release']
     types: [completed]

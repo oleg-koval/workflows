@@ -62,7 +62,7 @@
 
 ### Reusable workflows (recommended)
 
-7 of the 12 workflows support `workflow_call` — call them directly from your repo without copying files:
+8 of the 12 workflows support `workflow_call` — call them directly from your repo without copying files:
 
 ```yaml
 # .github/workflows/ci.yml in your repo
@@ -137,7 +137,7 @@ mv secret-scan-gitleaks.yml .github/workflows/
 | `agent-hygiene-review` | `min-score` (number, default `75`) | — | Checks out this repo to access the linter script |
 | `commitlint` | `base-sha`, `head-sha` (strings, optional) | — | When using outside PR context, must pass both SHAs |
 | `secret-scan-gitleaks` | `internal-ref-pattern` (string, optional) | — | |
-| `backfill-releases` | `min-release-tag` (string, default `v0.0.0`) | — | |
+| `backfill-releases` | `min-release-tag` (string, optional) | — | Falls back to `vars.BACKFILL_MIN_TAG`, then `v0.0.0` |
 | `lighthouse-performance` | — | `LHCI_GITHUB_APP_TOKEN` (optional) | |
 | `supabase-keepalive` | — | `SUPABASE_KEEPALIVE_URL` (required) | |
 | `scorecard` | `publish-results` (bool, default `false`) | — | Requires Code Scanning enabled to publish SARIF |
