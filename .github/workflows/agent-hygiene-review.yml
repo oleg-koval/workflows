@@ -23,6 +23,14 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out this repo (for the linter script)
+        if: github.event_name == 'workflow_call'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: oleg-koval/workflows
+          path: linter
+          persist-credentials: false
+
       - name: Check out PR head
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -38,7 +46,8 @@ jobs:
         id: lint
         continue-on-error: true
         run: |
-          python3 repo/scripts/agent_hygiene_report.py repo --min-score ${{ inputs.min-score || 75 }} > /tmp/agent-hygiene.json
+          SCRIPT_PATH=$([ "${{ github.event_name }}" = "workflow_call" ] && echo "linter/scripts/agent_hygiene_report.py" || echo "repo/scripts/agent_hygiene_report.py")
+          python3 "$SCRIPT_PATH" repo --min-score ${{ inputs.min-score || 75 }} > /tmp/agent-hygiene.json
 
       - name: Summarize results
         if: always()

@@ -2,10 +2,11 @@ name: PR Title
 
 # Enforce semantic/conventional PR title format.
 # e.g. "feat(auth): add OAuth2 support" or "fix: handle null pointer"
+# NOTE: This workflow requires pull_request_target event (with PR context).
+# It is not usable via workflow_call on other events.
 on:
   pull_request_target:
     types: [opened, edited, synchronize, reopened]
-  workflow_call:
 
 permissions:
   pull-requests: read

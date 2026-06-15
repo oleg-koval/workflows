@@ -3,17 +3,20 @@ name: Commit Messages
 # Enforce conventional commit format on all commits in a PR.
 # Requires commitlint + config (@commitlint/config-conventional or similar)
 # installed as a dev dependency.
+#
+# NOTE: When using workflow_call outside a pull_request context, you MUST
+# provide base-sha and head-sha inputs explicitly, otherwise the job skips.
 on:
   pull_request:
     branches: [main]
   workflow_call:
     inputs:
       base-sha:
-        description: 'Base commit SHA to lint from (defaults to PR base)'
+        description: 'Base commit SHA to lint from (required for workflow_call)'
         type: string
         default: ''
       head-sha:
-        description: 'Head commit SHA to lint to (defaults to PR head)'
+        description: 'Head commit SHA to lint to (required for workflow_call)'
         type: string
         default: ''
 
@@ -43,7 +46,7 @@ jobs:
           fi
 
       - name: Lint commit messages
-        if: hashFiles('package.json') != ''
+        if: hashFiles('package.json') != '' && (github.event.pull_request.base.sha != '' || inputs.base-sha != '')
         env:
           FROM_SHA: ${{ inputs.base-sha || github.event.pull_request.base.sha }}
           TO_SHA: ${{ inputs.head-sha || github.event.pull_request.head.sha }}
@@ -53,6 +56,10 @@ jobs:
             --to "$TO_SHA" \
             --verbose
 
-      - name: Skip commitlint
+      - name: Skip commitlint (missing package.json)
         if: hashFiles('package.json') == ''
         run: echo "No package.json found; skipping commitlint."
+
+      - name: Skip commitlint (missing SHAs)
+        if: hashFiles('package.json') != '' && github.event.pull_request.base.sha == '' && inputs.base-sha == ''
+        run: echo "No base/head SHAs provided (required for workflow_call outside PR context); skipping commitlint."

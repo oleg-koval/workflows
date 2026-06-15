@@ -62,7 +62,7 @@
 
 ### Reusable workflows (recommended)
 
-All workflows support `workflow_call` — call them directly from your repo without copying files:
+7 of the 12 workflows support `workflow_call` — call them directly from your repo without copying files:
 
 ```yaml
 # .github/workflows/ci.yml in your repo
@@ -75,9 +75,6 @@ jobs:
     with:
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
-
-  anti-slop:
-    uses: oleg-koval/workflows/.github/workflows/anti-slop.yml@main
 
   agent-hygiene:
     uses: oleg-koval/workflows/.github/workflows/agent-hygiene-review.yml@main
@@ -98,6 +95,14 @@ jobs:
     uses: oleg-koval/workflows/.github/workflows/backfill-releases.yml@main
     with:
       min-release-tag: v1.0.0
+
+  scorecard:
+    uses: oleg-koval/workflows/.github/workflows/scorecard.yml@main
+    with:
+      publish-results: false
+
+  docs-check:
+    uses: oleg-koval/workflows/.github/workflows/docs-index-keeper.yml@main
 ```
 
 Or pass all secrets at once with `secrets: inherit`:
@@ -109,6 +114,12 @@ jobs:
     secrets: inherit
 ```
 
+**Workflows NOT usable via `workflow_call`:**
+- `anti-slop` — requires PR diff context not available outside `pull_request` events
+- `semantic-pr-title` — requires PR title not available in `workflow_call` context
+- `dependabot-auto-merge` — inspects PR metadata not available outside `pull_request_target`
+- `prevent-unknown-contributors` — inspects PR author/status not available outside `pull_request_target`
+
 ### Copy-paste (alternative)
 
 Copy the workflow file into your repo's `.github/workflows/` directory:
@@ -119,20 +130,18 @@ curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/work
 mv secret-scan-gitleaks.yml .github/workflows/
 ```
 
-### Inputs and secrets
+### Callable workflows: inputs & secrets
 
-| Workflow | Inputs | Secrets |
-|----------|--------|---------|
-| `agent-hygiene-review` | `min-score` (number, default `75`) | — |
-| `commitlint` | `base-sha`, `head-sha` (strings, optional) | — |
-| `secret-scan-gitleaks` | `internal-ref-pattern` (string, optional) | — |
-| `backfill-releases` | `min-release-tag` (string, default `v0.0.0`) | — |
-| `lighthouse-performance` | — | `LHCI_GITHUB_APP_TOKEN` (optional) |
-| `supabase-keepalive` | — | `SUPABASE_KEEPALIVE_URL` (required) |
-| `anti-slop` | — | — |
-| `semantic-pr-title` | — | — |
-| `scorecard` | — | — |
-| `docs-index-keeper` | — | — |
+| Workflow | Inputs | Secrets | Notes |
+|----------|--------|---------|-------|
+| `agent-hygiene-review` | `min-score` (number, default `75`) | — | Checks out this repo to access the linter script |
+| `commitlint` | `base-sha`, `head-sha` (strings, optional) | — | When using outside PR context, must pass both SHAs |
+| `secret-scan-gitleaks` | `internal-ref-pattern` (string, optional) | — | |
+| `backfill-releases` | `min-release-tag` (string, default `v0.0.0`) | — | |
+| `lighthouse-performance` | — | `LHCI_GITHUB_APP_TOKEN` (optional) | |
+| `supabase-keepalive` | — | `SUPABASE_KEEPALIVE_URL` (required) | |
+| `scorecard` | `publish-results` (bool, default `false`) | — | Requires Code Scanning enabled to publish SARIF |
+| `docs-index-keeper` | — | — | |
 
 ---
 
