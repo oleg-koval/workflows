@@ -3,6 +3,7 @@
 > Reusable GitHub Actions workflows for [@oleg-koval](https://github.com/oleg-koval) repositories.
 
 [![ci](https://github.com/oleg-koval/workflows/actions/workflows/ci.yml/badge.svg)](https://github.com/oleg-koval/workflows/actions)
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/oleg-koval/workflows?utm_source=oss&utm_medium=github&utm_campaign=oleg-koval%2Fworkflows&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
 
 ---
 
