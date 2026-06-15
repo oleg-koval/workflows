@@ -1,0 +1,68 @@
+name: Backfill GitHub Releases
+
+# Create missing GitHub releases for tags that exist in git but have no release.
+# Useful after migrating from npm-only publish to GitHub releases.
+# Set MIN_RELEASE_TAG to skip tags older than a given version.
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['Release']
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backfill-releases
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    name: Backfill missing releases
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Create missing releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIN_RELEASE_TAG: ${{ vars.BACKFILL_MIN_TAG || 'v0.0.0' }}
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          existing_releases="$(gh release list --limit 9999 --json tagName --jq '.[].tagName')"
+          latest_stable_tag="$(git tag -l 'v[0-9]*' | grep -Ev '-' | sort -V | tail -n 1 || true)"
+
+          git tag -l 'v[0-9]*' --sort=version:refname | while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+
+            first_tag="$(printf '%s\n%s\n' "$MIN_RELEASE_TAG" "$tag" | sort -V | head -n 1)"
+            if [ "$first_tag" != "$MIN_RELEASE_TAG" ]; then
+              echo "Skipping $tag (before $MIN_RELEASE_TAG)"
+              continue
+            fi
+
+            if printf '%s\n' "$existing_releases" | grep -Fxq "$tag"; then
+              echo "Release already exists for $tag"
+              continue
+            fi
+
+            args=(release create "$tag" --verify-tag --generate-notes)
+            if [[ "$tag" == *-* ]]; then
+              args+=(--prerelease --latest=false)
+            elif [ "$tag" = "$latest_stable_tag" ]; then
+              args+=(--latest=true)
+            else
+              args+=(--latest=false)
+            fi
+
+            echo "Creating release for $tag"
+            gh "${args[@]}"
+          done

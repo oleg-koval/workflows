@@ -1,0 +1,48 @@
+name: Commit Messages
+
+# Enforce conventional commit format on all commits in a PR.
+# Requires commitlint + config (@commitlint/config-conventional or similar)
+# installed as a dev dependency.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: hashFiles('package.json') != ''
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        if: hashFiles('package.json') != ''
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Lint commit messages
+        if: hashFiles('package.json') != ''
+        env:
+          FROM_SHA: ${{ github.event.pull_request.base.sha }}
+          TO_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          npx commitlint \
+            --from "$FROM_SHA" \
+            --to "$TO_SHA" \
+            --verbose
+
+      - name: Skip commitlint
+        if: hashFiles('package.json') == ''
+        run: echo "No package.json found; skipping commitlint."
