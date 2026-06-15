@@ -1,0 +1,33 @@
+name: Bot Automerge
+
+# Auto-merge PRs from bots and specific maintainers.
+# Requires: oleg-koval/pr-automerge-github-action@v1
+# Set bot-logins and maintainer-handles as needed.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+  check_suite:
+    types: [completed]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+  issues: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: oleg-koval/pr-automerge-github-action@v1
+        with:
+          github-token: ${{ github.token }}
+          bot-logins: |
+            dependabot[bot]
+            renovate[bot]
+            snyk-bot
+          maintainer-handles: oleg-koval
+          merge-method: squash

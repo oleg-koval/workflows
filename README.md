@@ -43,12 +43,13 @@
 |----------|---------|--------------|
 | [lighthouse-performance](.github/workflows/lighthouse-performance.yml) | `push`, `pull_request` | Non-blocking Lighthouse CI — annotates but never blocks merge |
 
-### Infrastructure
+### Infrastructure & Automation
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | [supabase-keepalive](.github/workflows/supabase-keepalive.yml) | every 3 days | Ping Supabase endpoint to prevent free-tier project pause |
-| [dependabot-auto-merge](.github/workflows/dependabot-auto-merge.yml) | `pull_request_target` | Auto-merge Dependabot npm **patch-only** bumps after CI |
+| [automerge-github-action](.github/workflows/automerge-github-action.yml) | `pull_request_target`, `check_suite`, `pull_request_review` | Auto-merge PRs from bots & maintainers using [`oleg-koval/pr-automerge-github-action`](https://github.com/oleg-koval/pr-automerge-github-action) |
+| [dependabot-auto-merge](.github/workflows/dependabot-auto-merge.yml) | `pull_request_target` | Auto-merge Dependabot npm **patch-only** bumps after CI (narrower, safer alternative) |
 
 ### Maintenance
 
