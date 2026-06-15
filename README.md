@@ -123,12 +123,86 @@ jobs:
 
 ### Copy-paste (alternative)
 
-Copy the workflow file into your repo's `.github/workflows/` directory:
+Copy any workflow file into your repo's `.github/workflows/` directory. Pick a command from the section below:
+
+#### 🛡️ Security
 
 ```bash
-# Example: add secret scanning
+# Secret scan (gitleaks + internal reference check)
 curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/secret-scan-gitleaks.yml
 mv secret-scan-gitleaks.yml .github/workflows/
+
+# OpenSSF Scorecard
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/scorecard.yml
+mv scorecard.yml .github/workflows/
+```
+
+#### ✨ Quality gates
+
+```bash
+# Conventional commit linting
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/commitlint.yml
+mv commitlint.yml .github/workflows/
+
+# Semantic PR titles
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/semantic-pr-title.yml
+mv semantic-pr-title.yml .github/workflows/
+
+# Anti-AI-slop detection
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/anti-slop.yml
+mv anti-slop.yml .github/workflows/
+
+# Docs index keeper
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/docs-index-keeper.yml
+mv docs-index-keeper.yml .github/workflows/
+```
+
+#### 📊 Performance
+
+```bash
+# Lighthouse CI (non-blocking)
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/lighthouse-performance.yml
+mv lighthouse-performance.yml .github/workflows/
+```
+
+#### 🤖 Automation
+
+```bash
+# Bot automerge (dependabot, renovate, snyk, maintainers)
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/automerge-github-action.yml
+mv automerge-github-action.yml .github/workflows/
+
+# Dependabot npm patch-only automerge (conservative)
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/dependabot-auto-merge.yml
+mv dependabot-auto-merge.yml .github/workflows/
+
+# Supabase keepalive (prevent free-tier pause)
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/supabase-keepalive.yml
+mv supabase-keepalive.yml .github/workflows/
+```
+
+#### 🔧 Maintenance
+
+```bash
+# Backfill missing GitHub releases from git tags
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/backfill-releases.yml
+mv backfill-releases.yml .github/workflows/
+```
+
+#### 🚪 Contribution governance
+
+```bash
+# First-time contributor gate (requires issue first)
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/prevent-unknown-contributors.yml
+mv prevent-unknown-contributors.yml .github/workflows/
+```
+
+#### 🔍 Code review
+
+```bash
+# Agent code hygiene linter
+curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/agent-hygiene-review.yml
+mv agent-hygiene-review.yml .github/workflows/
 ```
 
 ### Callable workflows: inputs & secrets
