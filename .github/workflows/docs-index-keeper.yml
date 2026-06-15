@@ -9,6 +9,7 @@ on:
   pull_request:
     branches: [main]
     paths: ['docs/**']
+  workflow_call:
 
 permissions:
   contents: read

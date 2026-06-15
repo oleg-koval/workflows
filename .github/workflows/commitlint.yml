@@ -6,6 +6,16 @@ name: Commit Messages
 on:
   pull_request:
     branches: [main]
+  workflow_call:
+    inputs:
+      base-sha:
+        description: 'Base commit SHA to lint from (defaults to PR base)'
+        type: string
+        default: ''
+      head-sha:
+        description: 'Head commit SHA to lint to (defaults to PR head)'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -35,8 +45,8 @@ jobs:
       - name: Lint commit messages
         if: hashFiles('package.json') != ''
         env:
-          FROM_SHA: ${{ github.event.pull_request.base.sha }}
-          TO_SHA: ${{ github.event.pull_request.head.sha }}
+          FROM_SHA: ${{ inputs.base-sha || github.event.pull_request.base.sha }}
+          TO_SHA: ${{ inputs.head-sha || github.event.pull_request.head.sha }}
         run: |
           npx commitlint \
             --from "$FROM_SHA" \

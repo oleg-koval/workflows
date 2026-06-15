@@ -59,6 +59,57 @@
 
 ## Usage
 
+### Reusable workflows (recommended)
+
+All workflows support `workflow_call` — call them directly from your repo without copying files:
+
+```yaml
+# .github/workflows/ci.yml in your repo
+jobs:
+  secret-scan:
+    uses: oleg-koval/workflows/.github/workflows/secret-scan-gitleaks.yml@main
+
+  commitlint:
+    uses: oleg-koval/workflows/.github/workflows/commitlint.yml@main
+    with:
+      base-sha: ${{ github.event.pull_request.base.sha }}
+      head-sha: ${{ github.event.pull_request.head.sha }}
+
+  anti-slop:
+    uses: oleg-koval/workflows/.github/workflows/anti-slop.yml@main
+
+  agent-hygiene:
+    uses: oleg-koval/workflows/.github/workflows/agent-hygiene-review.yml@main
+    with:
+      min-score: 80
+
+  lighthouse:
+    uses: oleg-koval/workflows/.github/workflows/lighthouse-performance.yml@main
+    secrets:
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+  keepalive:
+    uses: oleg-koval/workflows/.github/workflows/supabase-keepalive.yml@main
+    secrets:
+      SUPABASE_KEEPALIVE_URL: ${{ secrets.SUPABASE_KEEPALIVE_URL }}
+
+  backfill:
+    uses: oleg-koval/workflows/.github/workflows/backfill-releases.yml@main
+    with:
+      min-release-tag: v1.0.0
+```
+
+Or pass all secrets at once with `secrets: inherit`:
+
+```yaml
+jobs:
+  secret-scan:
+    uses: oleg-koval/workflows/.github/workflows/secret-scan-gitleaks.yml@main
+    secrets: inherit
+```
+
+### Copy-paste (alternative)
+
 Copy the workflow file into your repo's `.github/workflows/` directory:
 
 ```bash
@@ -67,14 +118,20 @@ curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/work
 mv secret-scan-gitleaks.yml .github/workflows/
 ```
 
-No secrets or external dependencies beyond what each workflow documents. Secrets required per workflow:
+### Inputs and secrets
 
-| Workflow | Required secrets/vars |
-|----------|-----------------------|
-| `supabase-keepalive` | `SUPABASE_KEEPALIVE_URL` (secret) |
-| `lighthouse-performance` | `LHCI_GITHUB_APP_TOKEN` (optional) |
-| `backfill-releases` | `BACKFILL_MIN_TAG` (var, optional) |
-| `secret-scan-gitleaks` | `INTERNAL_REF_PATTERN` (var, optional) |
+| Workflow | Inputs | Secrets |
+|----------|--------|---------|
+| `agent-hygiene-review` | `min-score` (number, default `75`) | — |
+| `commitlint` | `base-sha`, `head-sha` (strings, optional) | — |
+| `secret-scan-gitleaks` | `internal-ref-pattern` (string, optional) | — |
+| `backfill-releases` | `min-release-tag` (string, default `v0.0.0`) | — |
+| `lighthouse-performance` | — | `LHCI_GITHUB_APP_TOKEN` (optional) |
+| `supabase-keepalive` | — | `SUPABASE_KEEPALIVE_URL` (required) |
+| `anti-slop` | — | — |
+| `semantic-pr-title` | — | — |
+| `scorecard` | — | — |
+| `docs-index-keeper` | — | — |
 
 ---
 

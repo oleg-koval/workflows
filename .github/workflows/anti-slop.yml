@@ -4,6 +4,7 @@ name: Anti-Slop
 # Runs only on pull requests (not on pushes to main).
 on:
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
