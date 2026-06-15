@@ -46,14 +46,21 @@ jobs:
         id: lint
         continue-on-error: true
         run: |
+          # Determine script location and repo root based on trigger
           if [ "${{ github.event_name }}" = "workflow_call" ]; then
             SCRIPT_PATH="linter/scripts/agent_hygiene_report.py"
-            MIN_SCORE="${{ inputs.min-score }}"
+            # For workflow_call, analyze the caller's repo only if it has agent-hygiene-review.yml
+            if [ ! -f "repo/.github/workflows/agent-hygiene-review.yml" ]; then
+              echo "Warning: agent-hygiene-review.yml not found in caller repo. Skipping linter."
+              echo '{"repoName":"caller","score":100,"counts":{"good":1,"warning":0,"fixNow":0},"findings":[{"bucket":"good","title":"Skipped","detail":"Caller repo does not have agent-hygiene-review.yml"}]}' > /tmp/agent-hygiene.json
+              exit 0
+            fi
+            REPO_ROOT="repo"
           else
             SCRIPT_PATH="repo/scripts/agent_hygiene_report.py"
-            MIN_SCORE=75
+            REPO_ROOT="repo"
           fi
-          python3 "$SCRIPT_PATH" repo --min-score "$MIN_SCORE" > /tmp/agent-hygiene.json
+          python3 "$SCRIPT_PATH" "$REPO_ROOT" --min-score ${{ inputs.min-score || 75 }} > /tmp/agent-hygiene.json
 
       - name: Summarize results
         if: always()
