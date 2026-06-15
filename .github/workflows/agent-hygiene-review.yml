@@ -5,23 +5,37 @@ name: Agent Hygiene Review
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
+  workflow_call:
+    inputs:
+      min-score:
+        description: 'Minimum hygiene score (0-100) before the job fails'
+        type: number
+        default: 75
 
 permissions:
   contents: read
 
 concurrency:
-  group: agent-hygiene-review-${{ github.event.pull_request.number }}
+  group: agent-hygiene-review-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   review:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out this repo (for the linter script)
+        if: github.event_name == 'workflow_call'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: oleg-koval/workflows
+          path: linter
+          persist-credentials: false
+
       - name: Check out PR head
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           path: repo
           persist-credentials: false
 
@@ -32,7 +46,23 @@ jobs:
         id: lint
         continue-on-error: true
         run: |
-          python3 repo/scripts/agent_hygiene_report.py repo --min-score 75 > /tmp/agent-hygiene.json
+          # Determine script location and repo root based on trigger
+          if [ "${{ github.event_name }}" = "workflow_call" ]; then
+            SCRIPT_PATH="linter/scripts/agent_hygiene_report.py"
+            MIN_SCORE="${{ inputs.min-score }}"
+            # For workflow_call, analyze the caller's repo only if it has agent-hygiene-review.yml
+            if [ ! -f "repo/.github/workflows/agent-hygiene-review.yml" ]; then
+              echo "Warning: agent-hygiene-review.yml not found in caller repo. Skipping linter."
+              echo '{"repoName":"caller","score":100,"counts":{"good":1,"warning":0,"fixNow":0},"findings":[{"bucket":"good","title":"Skipped","detail":"Caller repo does not have agent-hygiene-review.yml"}]}' > /tmp/agent-hygiene.json
+              exit 0
+            fi
+            REPO_ROOT="repo"
+          else
+            SCRIPT_PATH="repo/scripts/agent_hygiene_report.py"
+            REPO_ROOT="repo"
+            MIN_SCORE=75
+          fi
+          python3 "$SCRIPT_PATH" "$REPO_ROOT" --min-score "$MIN_SCORE" > /tmp/agent-hygiene.json
 
       - name: Summarize results
         if: always()

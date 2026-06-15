@@ -6,6 +6,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
+    secrets:
+      LHCI_GITHUB_APP_TOKEN:
+        description: 'Lighthouse CI GitHub App token for PR status annotations'
+        required: false
 
 permissions:
   contents: read

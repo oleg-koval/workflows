@@ -5,6 +5,11 @@ name: Backfill GitHub Releases
 # Set MIN_RELEASE_TAG to skip tags older than a given version.
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      min-release-tag:
+        description: 'Skip tags older than this version (e.g. v1.0.0). Defaults to vars.BACKFILL_MIN_TAG, then v0.0.0.'
+        type: string
   workflow_run:
     workflows: ['Release']
     types: [completed]
@@ -21,6 +26,7 @@ jobs:
     name: Backfill missing releases
     if: >
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'workflow_call' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -31,7 +37,7 @@ jobs:
       - name: Create missing releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MIN_RELEASE_TAG: ${{ vars.BACKFILL_MIN_TAG || 'v0.0.0' }}
+          MIN_RELEASE_TAG: ${{ inputs.min-release-tag || vars.BACKFILL_MIN_TAG || 'v0.0.0' }}
         run: |
           set -euo pipefail
 
