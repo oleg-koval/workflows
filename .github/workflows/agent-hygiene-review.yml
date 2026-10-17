@@ -29,6 +29,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           path: repo
+          fetch-depth: 25
           persist-credentials: false
 
       - name: Run agent hygiene linter
