@@ -2,6 +2,8 @@
 
 > Reusable GitHub Actions workflows for [@oleg-koval](https://github.com/oleg-koval) repositories.
 
+See [CONSUMING.md](CONSUMING.md) for the versioning and adoption contract.
+
 [![ci](https://github.com/oleg-koval/workflows/actions/workflows/ci.yml/badge.svg)](https://github.com/oleg-koval/workflows/actions)
 [![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/oleg-koval/workflows?utm_source=oss&utm_medium=github&utm_campaign=oleg-koval%2Fworkflows&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
 
@@ -48,7 +50,7 @@
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | [supabase-keepalive](.github/workflows/supabase-keepalive.yml) | every 3 days | Ping Supabase endpoint to prevent free-tier project pause |
-| [automerge-github-action](.github/workflows/automerge-github-action.yml) | `pull_request_target`, `check_suite`, `pull_request_review` | Auto-merge PRs from bots & maintainers using [`oleg-koval/pr-automerge-github-action`](https://github.com/oleg-koval/pr-automerge-github-action) |
+| [automerge-github-action](.github/workflows/automerge-github-action.yml) | PR, review, comment, schedule, manual dispatch | Auto-merge PRs from bots & maintainers using the review-thread-safe [`oleg-koval/pr-automerge-github-action`](https://github.com/oleg-koval/pr-automerge-github-action) |
 | [dependabot-auto-merge](.github/workflows/dependabot-auto-merge.yml) | `pull_request_target` | Auto-merge Dependabot npm **patch-only** bumps after CI (narrower, safer alternative) |
 
 ### Maintenance
@@ -63,47 +65,47 @@
 
 ### Reusable workflows (recommended)
 
-8 of the 12 workflows support `workflow_call` — call them directly from your repo without copying files:
+8 of the 14 workflows support `workflow_call` — call them directly from your repo without copying files. Pin the catalog to an immutable commit SHA; do not use `@main` in production:
 
 ```yaml
 # .github/workflows/ci.yml in your repo
 jobs:
   secret-scan:
-    uses: oleg-koval/workflows/.github/workflows/secret-scan-gitleaks.yml@main
+    uses: oleg-koval/workflows/.github/workflows/secret-scan-gitleaks.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
 
   commitlint:
-    uses: oleg-koval/workflows/.github/workflows/commitlint.yml@main
+    uses: oleg-koval/workflows/.github/workflows/commitlint.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
     with:
       base-sha: ${{ github.event.pull_request.base.sha }}
       head-sha: ${{ github.event.pull_request.head.sha }}
 
   agent-hygiene:
-    uses: oleg-koval/workflows/.github/workflows/agent-hygiene-review.yml@main
+    uses: oleg-koval/workflows/.github/workflows/agent-hygiene-review.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
     with:
       min-score: 80
 
   lighthouse:
-    uses: oleg-koval/workflows/.github/workflows/lighthouse-performance.yml@main
+    uses: oleg-koval/workflows/.github/workflows/lighthouse-performance.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
     secrets:
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
   keepalive:
-    uses: oleg-koval/workflows/.github/workflows/supabase-keepalive.yml@main
+    uses: oleg-koval/workflows/.github/workflows/supabase-keepalive.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
     secrets:
       SUPABASE_KEEPALIVE_URL: ${{ secrets.SUPABASE_KEEPALIVE_URL }}
 
   backfill:
-    uses: oleg-koval/workflows/.github/workflows/backfill-releases.yml@main
+    uses: oleg-koval/workflows/.github/workflows/backfill-releases.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
     with:
       min-release-tag: v1.0.0
 
   scorecard:
-    uses: oleg-koval/workflows/.github/workflows/scorecard.yml@main
+    uses: oleg-koval/workflows/.github/workflows/scorecard.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
     with:
       publish-results: false
 
   docs-check:
-    uses: oleg-koval/workflows/.github/workflows/docs-index-keeper.yml@main
+    uses: oleg-koval/workflows/.github/workflows/docs-index-keeper.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
 ```
 
 Or pass all secrets at once with `secrets: inherit`:
@@ -111,7 +113,7 @@ Or pass all secrets at once with `secrets: inherit`:
 ```yaml
 jobs:
   secret-scan:
-    uses: oleg-koval/workflows/.github/workflows/secret-scan-gitleaks.yml@main
+    uses: oleg-koval/workflows/.github/workflows/secret-scan-gitleaks.yml@f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b # workflows v1
     secrets: inherit
 ```
 
@@ -126,8 +128,8 @@ jobs:
 Copy the workflow file into your repo's `.github/workflows/` directory:
 
 ```bash
-# Example: add secret scanning
-curl -O https://raw.githubusercontent.com/oleg-koval/workflows/main/.github/workflows/secret-scan-gitleaks.yml
+# Example: add secret scanning from the approved catalog revision
+curl -o secret-scan-gitleaks.yml https://raw.githubusercontent.com/oleg-koval/workflows/f4ad5f2aa325a7fd61b2f7c2fb096e77570b963b/.github/workflows/secret-scan-gitleaks.yml
 mv secret-scan-gitleaks.yml .github/workflows/
 ```
 
@@ -135,7 +137,7 @@ mv secret-scan-gitleaks.yml .github/workflows/
 
 | Workflow | Inputs | Secrets | Notes |
 |----------|--------|---------|-------|
-| `agent-hygiene-review` | `min-score` (number, default `75`) | — | Checks out this repo to access the linter script |
+| `agent-hygiene-review` | `min-score` (number, default `75`) | — | Runs agent-hygiene-linter logic against the caller repo; use the published-action migration in [PR #7](https://github.com/oleg-koval/workflows/pull/7) when adopting |
 | `commitlint` | `base-sha`, `head-sha` (strings, optional) | — | When using outside PR context, must pass both SHAs |
 | `secret-scan-gitleaks` | `internal-ref-pattern` (string, optional) | — | |
 | `backfill-releases` | `min-release-tag` (string, optional) | — | Falls back to `vars.BACKFILL_MIN_TAG`, then `v0.0.0` |
@@ -144,6 +146,8 @@ mv secret-scan-gitleaks.yml .github/workflows/
 | `scorecard` | `publish-results` (bool, default `false`) | — | Requires Code Scanning enabled to publish SARIF |
 | `automerge-github-action` | none (uses GITHUB_TOKEN) |
 | `docs-index-keeper` | — | — | |
+
+For the full distribution contract and the boundary between reusable and event-bound workflows, see [CONSUMING.md](CONSUMING.md).
 
 ---
 
