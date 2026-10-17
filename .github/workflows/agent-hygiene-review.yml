@@ -34,7 +34,7 @@ jobs:
       - name: Run agent hygiene linter
         id: lint
         continue-on-error: true
-        uses: oleg-koval/agent-hygiene-linter@v1
+        uses: oleg-koval/agent-hygiene-linter@faf7ef669119497d2bbf5468b54c8c43115dc6be # v1 action wrapper fix
         with:
           path: repo
           format: json
