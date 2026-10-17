@@ -5,6 +5,8 @@ name: Bot Automerge
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review, edited]
+  check_suite:
+    types: [completed]
   pull_request_review:
     types: [submitted, edited, dismissed]
   pull_request_review_comment:
@@ -25,10 +27,6 @@ permissions:
   statuses: read
   issues: write
 
-concurrency:
-  group: automerge-${{ github.event.pull_request.number || inputs.pr-number || github.run_id }}
-  cancel-in-progress: false
-
 jobs:
   discover:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.pr-number == '')
@@ -40,13 +38,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          prs="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number --jq '[.[].number]')"
+          prs="$(
+            gh api --paginate \
+              "/repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" \
+              --jq '.[].number' |
+            jq -Rsc 'split("\n") | map(select(length > 0) | tonumber)'
+          )"
           printf 'pr-numbers=%s\n' "$prs" >> "$GITHUB_OUTPUT"
 
   retry:
     needs: discover
     if: needs.discover.result == 'success' && needs.discover.outputs.pr-numbers != '[]'
     runs-on: ubuntu-latest
+    concurrency:
+      group: automerge-${{ matrix.pr-number }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
@@ -66,6 +72,9 @@ jobs:
   manual:
     if: github.event_name == 'workflow_dispatch' && inputs.pr-number != ''
     runs-on: ubuntu-latest
+    concurrency:
+      group: automerge-${{ inputs.pr-number }}
+      cancel-in-progress: false
     steps:
       - uses: oleg-koval/pr-automerge-github-action@39316e1ba4f70de3f1576da572866841578be442 # v1.5.0
         with:
@@ -81,6 +90,9 @@ jobs:
   automerge:
     if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
+    concurrency:
+      group: automerge-${{ github.event.pull_request.number || github.event.check_suite.pull_requests[0].number || github.run_id }}
+      cancel-in-progress: false
     steps:
       - uses: oleg-koval/pr-automerge-github-action@39316e1ba4f70de3f1576da572866841578be442 # v1.5.0
         with:

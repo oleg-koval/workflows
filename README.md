@@ -144,8 +144,9 @@ mv secret-scan-gitleaks.yml .github/workflows/
 | `lighthouse-performance` | — | `LHCI_GITHUB_APP_TOKEN` (optional) | |
 | `supabase-keepalive` | — | `SUPABASE_KEEPALIVE_URL` (required) | |
 | `scorecard` | `publish-results` (bool, default `false`) | — | Requires Code Scanning enabled to publish SARIF |
-| `automerge-github-action` | none (uses GITHUB_TOKEN) |
 | `docs-index-keeper` | — | — | |
+
+`automerge-github-action` is event-bound rather than callable. Copy or sync it deliberately as described in [CONSUMING.md](CONSUMING.md); do not invoke it with `jobs.<job>.uses`.
 
 For the full distribution contract and the boundary between reusable and event-bound workflows, see [CONSUMING.md](CONSUMING.md).
 

@@ -51,6 +51,11 @@ jobs:
       head-sha: ${{ github.event.pull_request.head.sha || github.sha }}
 
   scorecard:
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
     uses: oleg-koval/workflows/.github/workflows/scorecard.yml@<workflows-sha> # workflows v1
     with:
       publish-results: false
