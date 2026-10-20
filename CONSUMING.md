@@ -4,7 +4,7 @@
 
 ## Versioning rule
 
-Pin every production use to an immutable commit SHA. The repository has no stable release tag yet; until a release is published, use the merge commit of the approved `workflows` PR and leave a version comment beside it.
+Pin every production use to an immutable commit SHA and leave the release tag beside it as a comment, for example `@<sha> # v1.0.0`. Release tags (`v1.0.0` onward) exist, so Dependabot's github-actions ecosystem bumps the SHA pins in the weekly bundle.
 
 ```yaml
 jobs:
