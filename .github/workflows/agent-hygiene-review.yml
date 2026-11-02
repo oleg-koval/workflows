@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out target repo
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -35,7 +35,7 @@ jobs:
       - name: Run agent hygiene linter
         id: lint
         continue-on-error: true
-        uses: oleg-koval/agent-hygiene-linter@faf7ef669119497d2bbf5468b54c8c43115dc6be # v1 action wrapper fix
+        uses: oleg-koval/agent-hygiene-linter@02c0d6f3d1432e9b8331eb028bdfcd705c33ccdb # v1 action wrapper fix
         with:
           path: repo
           format: json
